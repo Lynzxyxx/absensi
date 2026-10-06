@@ -19,3 +19,9 @@ th,td{border-bottom:1px solid #e1e5ea;padding:6px;text-align:left;white-space:no
 .spin{width:18px;height:18px;border:3px solid #cddcf3;border-top-color:#2563eb;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.top{position:relative}
+.hamb{font-size:1.4rem;line-height:1;padding:6px 12px;background:#fff;color:#2563eb;border-color:#2563eb}
+.drop{position:absolute;right:0;top:48px;background:#fff;border:1px solid #e1e5ea;border-radius:10px;padding:6px;min-width:210px;box-shadow:0 6px 20px rgba(0,0,0,.1);z-index:10}
+.drop button{display:block;width:100%;text-align:left;background:#fff;color:#1f2933;border:0;margin:0}
+.drop button.on{background:#eaf1fb;color:#2563eb;font-weight:600}
+.link{word-break:break-all;font-size:.85rem;color:#475569}

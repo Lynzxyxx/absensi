@@ -10,7 +10,7 @@ export default function Login() {
   const [msg, setMsg] = useState("");
   async function masuk(e) {
     e.preventDefault();
-    try { await api("/api/login", "POST", { ...f, as: "siswa" }); r.push("/siswa"); }
+    try { await api("/api/login", "POST", { ...f, as: "siswa" }); { const t = new URLSearchParams(window.location.search).get("token"); r.push(t ? "/siswa?token=" + encodeURIComponent(t) : "/siswa"); }; }
     catch (err) { setMsg(err.message); }
   }
   return (
