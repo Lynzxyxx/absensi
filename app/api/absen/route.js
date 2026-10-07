@@ -7,7 +7,7 @@ export async function GET() {
   if (!me) return json({ error: "Akun tidak ditemukan" }, 401);
   const rec = (await list("absen", (r) => r.orderByChild("siswaId").equalTo(s.id))).filter((x) => x.date === today());
   const last = (await list("sesi", (r) => r.orderByChild("createdAt").limitToLast(1)))[0];
-  const sesiAktif = last && last.expiresAt > Date.now() ? { berakhir: last.expiresAt, sudah: rec.some((x) => x.sesiId === last.id) } : null;
+  const sesiAktif = last && last.expiresAt > Date.now() ? { id: last.id, pengingatAt: last.pengingatAt || 0, berakhir: last.expiresAt, sudah: rec.some((x) => x.sesiId === last.id) } : null;
   return json({ nama: me.nama, username: me.username, sesiAktif, records: rec.sort((a, b) => b.at - a.at) });
 }
 export async function POST(req) {

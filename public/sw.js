@@ -12,5 +12,5 @@ self.addEventListener("push", (e) => {
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || "/siswa";
-  e.waitUntil(self.clients.openWindow(url));
+  e.waitUntil(self.clients.matchAll({ type: "window" }).then((cs) => { for (const c of cs) if ("focus" in c) return c.focus(); return self.clients.openWindow(url); }));
 });

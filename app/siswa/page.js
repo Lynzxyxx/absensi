@@ -3,37 +3,49 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../lib/api";
 import { SITE_TITLE } from "../../lib/config";
-import { aktifkanNotif } from "../../lib/pushClient";
+import { aktifkanNotif, cekNotif, unduhApk } from "../../lib/notif";
 
 export default function Siswa() {
   const r = useRouter();
-  const [d, setD] = useState(null);
-  const [token, setToken] = useState("");
-  const [status, setStatus] = useState("hadir"), [catatan, setCatatan] = useState("");
-  const [msg, setMsg] = useState({ t: "", ok: false });
-  const [pengumuman, setPengumuman] = useState([]), [notif, setNotif] = useState("");
+  const [d, setD] = useState(null), [token, setToken] = useState(""), [status, setStatus] = useState("hadir"), [catatan, setCatatan] = useState("");
+  const [msg, setMsg] = useState({ t: "", ok: false }), [pengumuman, setPengumuman] = useState([]), [buka, setBuka] = useState(false), [info, setInfo] = useState("");
   const load = () => api("/api/absen").then(setD).catch(() => r.replace("/" + window.location.search));
-  useEffect(() => { load(); api("/api/pengumuman").then(setPengumuman).catch(() => {}); const t = new URLSearchParams(window.location.search).get("token"); if (t) setToken(t.toUpperCase()); }, []);
-  useEffect(() => { const i = setInterval(load, 15000); return () => clearInterval(i); }, []);
+  const loadInfo = () => api("/api/pengumuman").then(setPengumuman).catch(() => {});
+  useEffect(() => {
+    load(); loadInfo();
+    const t = new URLSearchParams(window.location.search).get("token"); if (t) setToken(t.toUpperCase());
+    const i = setInterval(() => { load(); loadInfo(); }, 15000);
+    return () => clearInterval(i);
+  }, []);
+  useEffect(() => { if (d) cekNotif(d, pengumuman); }, [d, pengumuman]);
+
   async function kirim(e) {
     e.preventDefault();
     try { await api("/api/absen", "POST", { token, status, catatan }); setMsg({ t: "Absen berhasil dicatat", ok: true }); setToken(""); setCatatan(""); load(); }
     catch (err) { setMsg({ t: err.message, ok: false }); }
   }
   async function keluar() { await api("/api/login", "DELETE"); r.replace("/"); }
+  const menuNotif = () => { setBuka(false); aktifkanNotif(pengumuman).then((m) => setInfo(m === "push" ? "Notifikasi aktif, juga masuk saat aplikasi tertutup." : "Notifikasi aktif, muncul selama aplikasi terbuka.")).catch((e) => setInfo(e.message)); };
+  const menuApk = async () => { setBuka(false); setInfo(await unduhApk()); };
+
   if (!d) return <div className="wrap"><p className="load"><span className="spin" />Memuat…</p></div>;
   return (
     <div className="wrap" style={{ maxWidth: 480 }}>
-      <div className="top"><div><h1>{SITE_TITLE}</h1><div style={{ fontSize: "1.2rem", fontWeight: 600 }}>👋 Hai, {d.username}</div></div><button className="sec" onClick={keluar}>Keluar</button></div>
+      <div className="top">
+        <div><h1>{SITE_TITLE}</h1><div style={{ fontSize: "1.2rem", fontWeight: 600 }}>👋 Hai, {d.username}</div></div>
+        <button className="hamb" aria-label="Menu" aria-expanded={buka} onClick={() => setBuka(!buka)}>☰</button>
+        {buka && <div className="drop">
+          <button onClick={menuNotif}>🔔 Aktifkan notifikasi</button>
+          <button onClick={menuApk}>📲 Unduh APK</button>
+          <button onClick={keluar}>Keluar</button>
+        </div>}
+      </div>
+      {info && <p className="ok">{info}</p>}
       <div className="card">{d.sesiAktif
         ? (d.sesiAktif.sudah ? "✅ Kamu sudah absen di sesi ini." : `🟢 Sesi absen dibuka sampai ${new Date(d.sesiAktif.berakhir).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB. Segera isi absen!`)
         : "⚪ Belum ada sesi absen yang dibuka."}</div>
       {pengumuman.length > 0 && <div className="card"><h2>Pengumuman</h2>
         {pengumuman.map((x) => <div key={x.id} style={{ marginBottom: 8 }}><strong>{x.judul}</strong><br />{x.isi}</div>)}</div>}
-      <div className="card">
-        <button type="button" className="sec" onClick={() => aktifkanNotif().then(() => setNotif("Notifikasi aktif di perangkat ini")).catch((e) => setNotif(e.message))}>🔔 Aktifkan notifikasi</button>
-        {notif && <p style={{ margin: "8px 0 0" }}>{notif}</p>}
-      </div>
       <form className="card" onSubmit={kirim}>
         <h2>Isi absen</h2>
         <label>Token dari wali kelas</label>
@@ -44,7 +56,7 @@ export default function Siswa() {
         </select>
         {status !== "hadir" && <>
           <label>Penjelasan (wajib, supaya guru tahu alasannya)</label>
-          <textarea rows={3} maxLength={300} value={catatan} onChange={(e) => setCatatan(e.target.value)} placeholder="Penjelasan"
+          <textarea rows={3} maxLength={300} value={catatan} onChange={(e) => setCatatan(e.target.value)} placeholder="Isi disini."
             style={{ width: "100%", font: "inherit", padding: 8, border: "1px solid #c5ccd4", borderRadius: 6 }} />
         </>}
         {msg.t && <p className={msg.ok ? "ok" : "msg"}>{msg.t}</p>}

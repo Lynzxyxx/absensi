@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../../lib/api";
 import { SITE_TITLE } from "../../../../lib/config";
+import { unduhApk } from "../../../../lib/notif";
 
 const KODE = { hadir: "H", sakit: "S", izin: "I", terlambat: "T", alpha: "A" };
 const hariIni = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" });
@@ -72,6 +73,7 @@ export default function Wali() {
         <button className="hamb" aria-label="Menu" aria-expanded={buka} onClick={() => setBuka(!buka)}>☰</button>
         {buka && <div className="drop">
           {MENU.map(([k, n]) => <button key={k} className={menu === k ? "on" : ""} onClick={() => { setMenu(k); setBuka(false); }}>{n}</button>)}
+          <button onClick={async () => { setBuka(false); setInfo(await unduhApk()); }}>📲 Unduh APK</button>
           <button onClick={keluar}>Keluar</button>
         </div>}
       </div>
@@ -142,10 +144,10 @@ export default function Wali() {
         <label>Judul</label><input value={jd} maxLength={80} onChange={(e) => setJd(e.target.value)} />
         <label>Isi pesan</label>
         <textarea rows={3} maxLength={300} value={isiInfo} onChange={(e) => setIsiInfo(e.target.value)} style={{ width: "100%", font: "inherit", padding: 8, border: "1px solid #c5ccd4", borderRadius: 6 }} />
-        <button style={{ marginTop: 8 }} onClick={() => run(async () => { const d = await api("/api/pengumuman", "POST", { judul: jd, isi: isiInfo }); setInfo(`Notifikasi terkirim ke ${d.terkirim} perangkat`); setJd(""); setIsiInfo(""); })}>Kirim ke semua siswa</button>
+        <button style={{ marginTop: 8 }} onClick={() => run(async () => { const d = await api("/api/pengumuman", "POST", { judul: jd, isi: isiInfo }); setInfo(`Pengumuman tersimpan. Notifikasi langsung terkirim ke ${d.terkirim} perangkat, siswa lain melihatnya saat membuka aplikasi.`); setJd(""); setIsiInfo(""); })}>Kirim ke semua siswa</button>
         <h2 style={{ marginTop: 20 }}>Pengingat absen</h2>
         <p style={{ marginTop: 0 }}>Kirim notifikasi ke siswa yang belum mengisi absen pada token yang sedang aktif.</p>
-        <button onClick={() => run(async () => { const d = await api("/api/pengingat", "POST"); setInfo(`Pengingat terkirim ke ${d.terkirim} perangkat (${d.belum} siswa belum absen)`); })}>Kirim pengingat</button>
+        <button onClick={() => run(async () => { const d = await api("/api/pengingat", "POST"); setInfo(`Pengingat dikirim. ${d.belum} siswa belum absen, notifikasi langsung terkirim ke ${d.terkirim} perangkat.`); })}>Kirim pengingat</button>
       </div>}
 
       {menu === "rekap" && <div className="card">

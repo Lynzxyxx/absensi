@@ -9,21 +9,12 @@ export default function Login() {
   const r = useRouter(), vid = useRef(null);
   const [f, setF] = useState({ username: "", password: "" }), [cap, setCap] = useState({ token: "", jawab: "" }), [ulang, setUlang] = useState(0);
   const [msg, setMsg] = useState(""), [mute, setMute] = useState(true), [lihat, setLihat] = useState(false);
-  const [apk, setApk] = useState(false), [pasang, setPasang] = useState(null), [terpasang, setTerpasang] = useState(false);
 
   useEffect(() => {
     const v = vid.current; if (!v) return;
     v.muted = true;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause(); else v.play().catch(() => {});
   }, []);
-  useEffect(() => {
-    setTerpasang(window.matchMedia("(display-mode: standalone)").matches);
-    fetch("/absen-kelas.apk", { method: "HEAD" }).then((x) => setApk(x.ok)).catch(() => {}); // tombol APK muncul kalau file-nya ada di folder public
-    const h = (e) => { e.preventDefault(); setPasang(e); };
-    window.addEventListener("beforeinstallprompt", h);
-    return () => window.removeEventListener("beforeinstallprompt", h);
-  }, []);
-  async function pasangApp() { pasang.prompt(); await pasang.userChoice; setPasang(null); }
   function suara() { const v = vid.current; v.muted = !v.muted; setMute(v.muted); if (!v.muted) v.play().catch(() => {}); }
 
   async function masuk(e) {
@@ -56,14 +47,6 @@ export default function Login() {
           {msg && <p className="msg">{msg}</p>}
           <button style={{ marginTop: 12, width: "100%" }}>Masuk</button>
         </form>
-        {(apk || pasang) && !terpasang && <div className="unduh">
-          <div>📲 <strong>Pasang aplikasi {SITE_TITLE}</strong></div>
-          <div style={{ marginTop: 6 }}>
-            {apk && <a className="btn" href="/absen-kelas.apk" download>Unduh APK (Android)</a>}
-            {pasang && <button type="button" className="sec" onClick={pasangApp}>Pasang langsung</button>}
-          </div>
-          {apk && <p style={{ margin: "8px 0 0", fontSize: ".8rem" }}>Jika diminta, izinkan pemasangan dari sumber tidak dikenal.</p>}
-        </div>}
       </div>
     </div>
   );

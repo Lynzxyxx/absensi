@@ -12,6 +12,6 @@ export async function POST(req) {
   const data = { judul: judul.trim().slice(0, 80), isi: isi.trim().slice(0, 300), at: Date.now() };
   await db.ref("pengumuman").push(data);
   let terkirim = 0;
-  try { terkirim = await kirim(null, { ...data, url: "/siswa" }); } catch (e) { return json({ error: "Pengumuman tersimpan, tapi notifikasi gagal dikirim." }, 500); }
-  return json({ terkirim });
+  try { terkirim = await kirim(null, { ...data, url: "/siswa" }); } catch {}
+  return json({ ok: true, terkirim });
 }
