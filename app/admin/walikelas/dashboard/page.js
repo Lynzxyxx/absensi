@@ -8,7 +8,7 @@ const KODE = { hadir: "H", sakit: "S", izin: "I", terlambat: "T", alpha: "A" };
 const hariIni = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" });
 const NM = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 const lbl = (d) => `${NM[new Date(d + "T00:00:00Z").getUTCDay()]} ${d.slice(8)}/${d.slice(5, 7)}`;
-const MENU = [["token", "Buat token"], ["siswa", "Daftar nama siswa"], ["rekap", "Rekapan"]];
+const MENU = [["token", "Buat token"], ["siswa", "Daftar nama siswa"], ["rekap", "Rekapan"], ["info", "Pengumuman"]];
 const JUDUL = { hari: "Hari ini", minggu: "Minggu ini", semua: "Semua" };
 
 export default function Wali() {
@@ -19,6 +19,7 @@ export default function Wali() {
   const [rmode, setRmode] = useState("minggu"), [tgl, setTgl] = useState(hariIni()), [now, setNow] = useState(Date.now());
   const [f, setF] = useState({ nama: "", username: "", password: "" }), [msg, setMsg] = useState(""), [info, setInfo] = useState("");
   const [daftar, setDaftar] = useState(""), [pwSama, setPwSama] = useState(""), [hasil, setHasil] = useState(null);
+  const [jd, setJd] = useState(""), [isiInfo, setIsiInfo] = useState("");
 
   const loadAll = useCallback(async () => {
     try {
@@ -130,6 +131,21 @@ export default function Wali() {
             <button className="sec" onClick={() => { const p = prompt("Password baru untuk " + s.nama); if (p) run(() => api("/api/siswa", "PUT", { id: s.id, password: p })); }}>Ganti password</button>{" "}
             <button className="bad" onClick={() => confirm("Hapus " + s.nama + "?") && run(() => api("/api/siswa?id=" + s.id, "DELETE"))}>Hapus</button></td></tr>)}
         </tbody></table></div>
+      </div>}
+
+      {menu === "info" && <div className="card">
+        <h2>Pengumuman ke siswa</h2>
+        <div className="row" style={{ marginBottom: 8 }}>
+          <button className="sec" onClick={() => { setJd("Libur hari ini"); setIsiInfo("Hari ini libur. Tidak ada absen."); }}>Libur hari ini</button>
+          <button className="sec" onClick={() => { setJd("Hari ini UTS"); setIsiInfo("Hari ini ada UTS. Jangan lupa absen dan siapkan alat tulis."); }}>UTS hari ini</button>
+        </div>
+        <label>Judul</label><input value={jd} maxLength={80} onChange={(e) => setJd(e.target.value)} />
+        <label>Isi pesan</label>
+        <textarea rows={3} maxLength={300} value={isiInfo} onChange={(e) => setIsiInfo(e.target.value)} style={{ width: "100%", font: "inherit", padding: 8, border: "1px solid #c5ccd4", borderRadius: 6 }} />
+        <button style={{ marginTop: 8 }} onClick={() => run(async () => { const d = await api("/api/pengumuman", "POST", { judul: jd, isi: isiInfo }); setInfo(`Notifikasi terkirim ke ${d.terkirim} perangkat`); setJd(""); setIsiInfo(""); })}>Kirim ke semua siswa</button>
+        <h2 style={{ marginTop: 20 }}>Pengingat absen</h2>
+        <p style={{ marginTop: 0 }}>Kirim notifikasi ke siswa yang belum mengisi absen pada token yang sedang aktif.</p>
+        <button onClick={() => run(async () => { const d = await api("/api/pengingat", "POST"); setInfo(`Pengingat terkirim ke ${d.terkirim} perangkat (${d.belum} siswa belum absen)`); })}>Kirim pengingat</button>
       </div>}
 
       {menu === "rekap" && <div className="card">

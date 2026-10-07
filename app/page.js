@@ -1,31 +1,69 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../lib/api";
 import { SITE_TITLE } from "../lib/config";
+import Captcha from "./Captcha";
 
 export default function Login() {
-  const r = useRouter();
-  const [f, setF] = useState({ username: "", password: "" });
-  const [msg, setMsg] = useState("");
+  const r = useRouter(), vid = useRef(null);
+  const [f, setF] = useState({ username: "", password: "" }), [cap, setCap] = useState({ token: "", jawab: "" }), [ulang, setUlang] = useState(0);
+  const [msg, setMsg] = useState(""), [mute, setMute] = useState(true), [lihat, setLihat] = useState(false);
+  const [apk, setApk] = useState(false), [pasang, setPasang] = useState(null), [terpasang, setTerpasang] = useState(false);
+
+  useEffect(() => {
+    const v = vid.current; if (!v) return;
+    v.muted = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause(); else v.play().catch(() => {});
+  }, []);
+  useEffect(() => {
+    setTerpasang(window.matchMedia("(display-mode: standalone)").matches);
+    fetch("/absen-kelas.apk", { method: "HEAD" }).then((x) => setApk(x.ok)).catch(() => {}); // tombol APK muncul kalau file-nya ada di folder public
+    const h = (e) => { e.preventDefault(); setPasang(e); };
+    window.addEventListener("beforeinstallprompt", h);
+    return () => window.removeEventListener("beforeinstallprompt", h);
+  }, []);
+  async function pasangApp() { pasang.prompt(); await pasang.userChoice; setPasang(null); }
+  function suara() { const v = vid.current; v.muted = !v.muted; setMute(v.muted); if (!v.muted) v.play().catch(() => {}); }
+
   async function masuk(e) {
     e.preventDefault();
-    try { await api("/api/login", "POST", { ...f, as: "siswa" }); { const t = new URLSearchParams(window.location.search).get("token"); r.push(t ? "/siswa?token=" + encodeURIComponent(t) : "/siswa"); }; }
-    catch (err) { setMsg(err.message); }
+    try {
+      await api("/api/login", "POST", { ...f, as: "siswa", captchaToken: cap.token, captcha: cap.jawab });
+      const t = new URLSearchParams(window.location.search).get("token");
+      r.push(t ? "/siswa?token=" + encodeURIComponent(t) : "/siswa");
+    } catch (err) { setMsg(err.message); setUlang((u) => u + 1); }
   }
   return (
-    <div className="wrap" style={{ maxWidth: 400, paddingTop: 60 }}>
-      <div className="card">
-        <h1>{SITE_TITLE}</h1>
-        <p style={{ marginTop: 0 }}>Masuk dengan akun dari wali kelas.</p>
-        <form onSubmit={masuk}>
+    <div className="gelap">
+      <div className="vid">
+        <video ref={vid} src="/login.mp4" poster="/login-poster.jpg" autoPlay muted loop playsInline />
+        <button type="button" className="suara" onClick={suara}>{mute ? "🔇 Aktifkan suara" : "🔊 Matikan suara"}</button>
+      </div>
+      <div className="konten">
+        <div style={{ fontSize: 34, lineHeight: 1 }}>👋</div>
+        <h1 style={{ margin: "6px 0 0" }}>Halo!</h1>
+        <p style={{ margin: "2px 0 0", color: "#94a3b8" }}>Selamat datang di {SITE_TITLE}</p>
+        <form className="card" onSubmit={masuk}>
           <label>Username</label>
           <input value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} autoComplete="username" />
           <label>Password</label>
-          <input type="password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="current-password" />
+          <div className="pw">
+            <input type={lihat ? "text" : "password"} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="current-password" />
+            <button type="button" className="sec" onClick={() => setLihat(!lihat)}>{lihat ? "Sembunyi" : "Lihat"}</button>
+          </div>
+          <Captcha ulang={ulang} onChange={setCap} />
           {msg && <p className="msg">{msg}</p>}
           <button style={{ marginTop: 12, width: "100%" }}>Masuk</button>
         </form>
+        {(apk || pasang) && !terpasang && <div className="unduh">
+          <div>📲 <strong>Pasang aplikasi {SITE_TITLE}</strong></div>
+          <div style={{ marginTop: 6 }}>
+            {apk && <a className="btn" href="/absen-kelas.apk" download>Unduh APK (Android)</a>}
+            {pasang && <button type="button" className="sec" onClick={pasangApp}>Pasang langsung</button>}
+          </div>
+          {apk && <p style={{ margin: "8px 0 0", fontSize: ".8rem" }}>Jika diminta, izinkan pemasangan dari sumber tidak dikenal.</p>}
+        </div>}
       </div>
     </div>
   );

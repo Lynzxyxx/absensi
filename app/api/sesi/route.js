@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { db, json, need, today, list } from "../../../lib/server";
+import { kirim } from "../../../lib/push";
 
 export async function GET() {
   if (!need("wali")) return json({ error: "Tidak diizinkan" }, 401);
@@ -20,5 +21,6 @@ export async function POST(req) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const token = Array.from(crypto.randomBytes(6), (x) => chars[x % chars.length]).join("");
   await db.ref("sesi").push({ token, date: today(), createdAt: now, expiresAt });
+  try { await kirim(null, { judul: "Token absen dibuka", isi: "Segera isi absen sebelum token berakhir.", url: `/siswa?token=${token}` }); } catch {}
   return json({ ok: true });
 }

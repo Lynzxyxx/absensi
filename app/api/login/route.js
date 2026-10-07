@@ -1,8 +1,10 @@
 import { json, makeSession, checkPw, list } from "../../../lib/server";
+import { cekCaptcha } from "../../../lib/captcha";
 const cookie = (v, age) => `s=${v}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`;
 
 export async function POST(req) {
-  const { username = "", password = "", as = "siswa" } = await req.json();
+  const { username = "", password = "", as = "siswa", captchaToken = "", captcha = "" } = await req.json();
+  if (!(await cekCaptcha(captchaToken, captcha))) return json({ error: "Kode keamanan salah. Coba lagi." }, 400);
   let sess = null;
   if (as === "wali") {
     if (username === process.env.WALI_USERNAME && password === process.env.WALI_PASSWORD) sess = { role: "wali" };

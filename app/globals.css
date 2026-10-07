@@ -25,3 +25,18 @@ th,td{border-bottom:1px solid #e1e5ea;padding:6px;text-align:left;white-space:no
 .drop button{display:block;width:100%;text-align:left;background:#fff;color:#1f2933;border:0;margin:0}
 .drop button.on{background:#eaf1fb;color:#2563eb;font-weight:600}
 .link{word-break:break-all;font-size:.85rem;color:#475569}
+.gelap{min-height:100vh;background:#050b1f;color:#f1f5f9}
+.vid{position:relative;height:min(56vh,75vw);background:#050b1f}
+.vid video{width:100%;height:100%;object-fit:contain;object-position:top center;display:block}
+.vid::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(transparent,#050b1f);pointer-events:none}
+.suara{position:absolute;right:10px;top:10px;z-index:2;background:rgba(15,23,42,.7);border-color:rgba(148,163,184,.55);font-size:.8rem;padding:6px 10px}
+.konten{max-width:400px;margin:-34px auto 0;padding:0 16px 40px;position:relative;text-align:center;z-index:1}
+.gelap .card{background:rgba(15,23,42,.74);border-color:rgba(148,163,184,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);text-align:left;margin-top:14px}
+.gelap label{color:#cbd5e1}
+.gelap input{background:rgba(15,23,42,.5);color:#e2e8f0;border-color:rgba(148,163,184,.5)}
+.gelap button{background:#3b82f6;border-color:#3b82f6}
+.gelap button.sec{background:rgba(15,23,42,.5);color:#93c5fd;border-color:#3b82f6}
+.gelap .msg{color:#fca5a5}
+.pw{position:relative}.pw input{padding-right:64px}.pw button{position:absolute;right:4px;top:4px;padding:4px 8px;font-size:.8rem}
+.unduh{margin-top:14px;padding:12px;border:1px dashed rgba(148,163,184,.55);border-radius:10px;font-size:.9rem;color:#cbd5e1;text-align:center}
+.gelap a.btn{display:inline-block;background:#3b82f6;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;margin:0 4px}
